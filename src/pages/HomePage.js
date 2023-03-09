@@ -1,5 +1,4 @@
 import React from 'react';
-import Header from './Header';
 import Footer from './Footer';
 import SearchForm from './SearchForm';
 const HomePage =()=>{
@@ -8,7 +7,7 @@ const HomePage =()=>{
         <div id="app" className="generic">
         <div>
             <app-header>
-                <Header />
+                
             </app-header>
             <div className="content">
                 <us-page-home inline-template>
