@@ -1,5 +1,6 @@
-import React,{useState} from "react";
+import React,{useState,useEffect} from "react";
 import moment from "moment";
+import axios from "axios";
 
 const SearchForm = () => {
 
@@ -14,7 +15,7 @@ const SearchForm = () => {
         parkingCheckOut:false
 
     })
-
+    
     const onSubmitHandler = (e) => {
         e.preventDefault();
         //i'm printing all the data fetched in console just to verify everything works fine
@@ -82,6 +83,20 @@ const SearchForm = () => {
             SetErrors((err) => ({ ...err, departureAirport: true }))
             }
     }
+
+    const [records, setRecords] = useState([]);
+    const [loading, setLoading] = useState(false);
+    
+    const fetchData = async () => {
+        setLoading(true)
+        const {data} = await axios.get('http://43.205.1.85:9009/v1/airports')
+        setLoading(false)
+        setRecords(data.results)
+        }
+        useEffect(()=> {
+        fetchData()
+        },[])
+       
     
     return (
         <section id="hero"
@@ -117,9 +132,24 @@ const SearchForm = () => {
                                 <input type="text" placeholder="Departure Airport" 
                                 onChange={departureAirportHandler} 
                                 value={departureAirport} className="placeholder placeholder-airport"/>
-                            {(errors && errors.departureAirport)? <h4 style={{color:"white",backgroundColor:"Highlight"}}>Invaild Departure Airport</h4>:null}
+                                
                             </div> <i
                                 className="fas fa-map-marker-alt input-icon"></i>
+                                 
+                                {records.map((record,index)=>{
+                                const isEven = index%2;
+                                return (
+                                <li className="dropdown-item" key={index}style={{backgroundColor:isEven?'grey':'silver'}}>
+                                {record.name}
+                                </li>
+                                )
+                                }
+                                )} 
+                                
+                              
+                                {loading ?<h1>Loading</h1>:null}
+                            {(errors && errors.departureAirport)? <h4 style={{color:"white",backgroundColor:"Highlight"}}>Invaild Departure Airport</h4>:null}
+                               
                         </label>
                         <div className="col p-0 row m-0 mb-2 dates"><label
                                 className="col-sm-6 p-0 pr-sm-3 date_input">
