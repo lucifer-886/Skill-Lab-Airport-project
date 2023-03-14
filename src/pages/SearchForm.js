@@ -1,8 +1,39 @@
 import React,{useState,useEffect} from "react";
 import moment from "moment";
 import axios from "axios";
-
+import AirportSuggestions from "./AirportSuggestions";
 const SearchForm = () => {
+
+    const [airports, setAirports] = useState([]);
+    const [filteredAirports, setFilteredAirports] = useState('');
+    
+    const getAirport = async () => {
+        
+        try {
+            const { data, status } = await axios.get('http://43.205.1.85:9009/v1/airports');
+            if (status === 200 && data) {
+                setAirports(data?.results ?? [])
+            } else {
+                setAirports([])
+            }
+            setLoading(false)
+        } catch (error) {
+            setLoading(false)
+            console.log(error.message)
+        }
+    }
+
+    useEffect(() => {
+        
+        getAirport()
+    }, [])
+
+    const [loading, setLoading] = useState(true);
+    
+    const selectAirport =(value)=>{
+        setDepartureAirport(value)
+        setFilteredAirports([])
+    }
 
     const today = moment().format('YYYY-MM-DD').toString()
     const tomorrow = moment().add(1,'days').format('YYYY-MM-DD').toString()
@@ -13,7 +44,6 @@ const SearchForm = () => {
         departureAirport:false,
         parkingCheckIn:false,
         parkingCheckOut:false
-
     })
     
     const onSubmitHandler = (e) => {
@@ -33,6 +63,8 @@ const SearchForm = () => {
        else if(departureAirport && parkingCheckIn && parkingCheckOut)
         {
             alert("Form Submitted")
+            window.location.href = `/results?departureAirport=${departureAirport}&checkin=${parkingCheckIn}&checkout=${parkingCheckOut}`
+
         }
         else{
             SetErrors({
@@ -41,8 +73,6 @@ const SearchForm = () => {
                 parkingCheckOut:!parkingCheckOut
             })
         }
-
-        
     }
 
     const parkingCheckOutHandler =(e) => {
@@ -82,21 +112,11 @@ const SearchForm = () => {
             } else {
             SetErrors((err) => ({ ...err, departureAirport: true }))
             }
+            const filteredAirportsData = airports.filter((airport) => 
+            airport.name.toLowerCase().includes(e.target.value.toLowerCase()));
+            setFilteredAirports(filteredAirportsData?? [])
+            console.log(filteredAirports)
     }
-
-    const [records, setRecords] = useState([]);
-    const [loading, setLoading] = useState(false);
-    
-    const fetchData = async () => {
-        setLoading(true)
-        const {data} = await axios.get('http://43.205.1.85:9009/v1/airports')
-        setLoading(false)
-        setRecords(data.results)
-        }
-        useEffect(()=> {
-        fetchData()
-        },[])
-       
     
     return (
         <section id="hero"
@@ -125,6 +145,7 @@ const SearchForm = () => {
                         </div>
                     </div> 
                 </div>
+                {loading && <h3>loading..</h3>}
                 <form action="/results.html" method="post" >
                     <div className="options row m-0"><label className="col-12 col-xl-3 p-0 mr-xl-3 mb-2">
                             <div className="heading mb-1">Departure Airport</div>
@@ -135,21 +156,11 @@ const SearchForm = () => {
                                 
                             </div> <i
                                 className="fas fa-map-marker-alt input-icon"></i>
-                                 
-                                {records.map((record,index)=>{
-                                const isEven = index%2;
-                                return (
-                                <li className="dropdown-item" key={index}style={{backgroundColor:isEven?'grey':'silver'}}>
-                                {record.name}
-                                </li>
-                                )
-                                }
-                                )} 
-                                
-                              
-                                {loading ?<h1>Loading</h1>:null}
+                            
+                            {loading ?<h1>Loading</h1>:null}
                             {(errors && errors.departureAirport)? <h4 style={{color:"white",backgroundColor:"Highlight"}}>Invaild Departure Airport</h4>:null}
-                               
+                            <AirportSuggestions airports={filteredAirports} selectAirport={selectAirport} />
+
                         </label>
                         <div className="col p-0 row m-0 mb-2 dates"><label
                                 className="col-sm-6 p-0 pr-sm-3 date_input">
@@ -174,4 +185,4 @@ const SearchForm = () => {
     </section>
     );
 }
-export default SearchForm;
+export default SearchForm;
